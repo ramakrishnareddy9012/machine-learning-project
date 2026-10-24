@@ -1,16 +1,6 @@
 # Real-Time Sentiment Analysis System with Web Scraping
 
-**Department of Computer Science and Engineering | Aditya University**  
-*Machine Learning & NLP Project Review Implementation*
-
----
-
-## 👥 Team Members & Roll Numbers
-- **I. Harshil Preetham** – 24B11CS156 *(Project Lead)*
-- **D. V. S. Samrudh** – 24B11CS114
-- **M. C. S. Vikas Reddy** – 24B11CS274
-- **J. Lakshman Swamy** – 24B11CS163
-- **K. Rama Krishna Reddy** – 24B11CS233
+An end-to-end Machine Learning & NLP system for real-time web scraping, text preprocessing, and sentiment classification.
 
 ---
 
@@ -51,11 +41,11 @@ The system automatically extracts online textual content (user reviews, news par
    - **Step 2:** Lowercasing
    - **Step 3:** Punctuation and special character removal
    - **Step 4:** Tokenization
-   - **Step 5:** Stop-word filtering
+   - **Step 5:** Stop-word filtering (with negation preservation)
    - **Step 6:** Suffix normalization & Stemming
 
 3. **Machine Learning Classifiers (`app/model.py`)**
-   - **Multinomial Naive Bayes**
+   - **Multinomial / Complement Naive Bayes**
    - **Logistic Regression (TF-IDF)**
    - **Linear Support Vector Machine (LinearSVC)**
    - **VADER Rule-Based Sentiment Analyzer**
@@ -66,7 +56,7 @@ The system automatically extracts online textual content (user reviews, news par
    - Live URL Web Content Scraper & Paragraph Analyzer.
    - Real-Time Opinion Stream Feed Simulator.
    - Model Evaluation Comparison Matrix (Accuracy, Precision, Recall, F1-Score).
-   - Embedded Project Review Presentation Viewer (Slides 1 to 10).
+   - Custom Dataset Upload and on-the-fly sentiment annotation.
 
 ---
 
@@ -108,10 +98,6 @@ python -m unittest discover tests
 | `POST` | `/api/analyze/url` | Scrapes target URL, extracts text, and returns sentiment metrics |
 | `GET` | `/api/preprocessing/inspect` | Returns step-by-step trace of NLP cleaning steps |
 | `GET` | `/api/model/metrics` | Returns evaluation metrics (Accuracy, Precision, Recall, F1) |
-
----
-
-## 🎓 University Review Details
-- **Department:** Computer Science & Engineering
-- **Institution:** Aditya University
-- **Project Topic:** Real-Time Sentiment Analysis System with Web Scraping
+| `POST` | `/api/dataset/upload` | Uploads and processes custom CSV/JSON dataset |
+| `GET` | `/api/dataset/list` | Lists all available datasets |
+| `POST` | `/api/dataset/evaluate` | Evaluates sentiment across selected dataset |
