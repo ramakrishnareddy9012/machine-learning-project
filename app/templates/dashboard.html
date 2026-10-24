@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Sentiment AI Dashboard | Aditya University CSE</title>
+    <!-- Google Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-body: #090d16;
+            --bg-sidebar: #0d1322;
+            --bg-card: rgba(18, 26, 44, 0.75);
+            --bg-input: #0b101d;
+            
+            --border-glow: rgba(99, 102, 241, 0.4);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --cyan: #06b6d4;
+            --emerald: #10b981;
+            --amber: #f59e0b;
+            --rose: #f43f5e;
+            --violet: #8b5cf6;
+
+            --text-title: #ffffff;
+            --text-body: #cbd5e1;
+            --text-muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 45%),
+                radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.12) 0px, transparent 45%),
+                radial-gradient(at 50% 100%, rgba(139, 92, 246, 0.12) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-body);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        /* SIDEBAR */
+        aside {
+            width: 290px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem 1.1rem;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            margin-bottom: 1.5rem;
+            padding: 0 0.4rem;
+        }
+
+        .brand-logo {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--primary), var(--cyan));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .brand-text h2 {
+            font-size: 1.12rem;
+            font-weight: 800;
+            color: var(--text-title);
+            letter-spacing: -0.02em;
+        }
+
+        .brand-text p {
+            font-size: 0.72rem;
+            color: var(--cyan);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-label {
+            font-size: 0.68rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin: 0.75rem 0.5rem 0.4rem 0.5rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            list-style: none;
+        }
+
+        .nav-item button {
+            width: 100%;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            padding: 0.65rem 0.9rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-align: left;
+        }
+
+        .nav-item button i {
+            font-size: 0.95rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-item button:hover {
+            color: var(--text-title);
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--border-subtle);
+        }
+
+        .nav-item button.active {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.22), rgba(6, 182, 212, 0.16));
+            border-color: rgba(99, 102, 241, 0.4);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.2);
+        }
+
+        .nav-item button.active i {
+            color: var(--cyan);
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            background: rgba(9, 14, 26, 0.85);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 0.85rem;
+            font-size: 0.75rem;
+        }
+
+        /* MAIN CONTENT AREA */
+        main {
+            margin-left: 290px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* TOPBAR */
+        topbar {
+            background: rgba(9, 13, 22, 0.9);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+        }
+
+        .page-title h1 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-title);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .badge-live {
+            background: rgba(16, 185, 129, 0.14);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            color: var(--emerald);
+            padding: 0.4rem 0.9rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--emerald);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--emerald);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .content-body {
+            padding: 1.75rem 2rem;
+            flex: 1;
+        }
+
+        /* KPI STATS CARDS */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 1.2rem 1.4rem;
+            backdrop-filter: blur(14px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.25s ease;
+        }
+
+        .kpi-card:hover {
+            border-color: var(--border-glow);
+            transform: translateY(-2px);
+        }
+
+        .kpi-title {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .kpi-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-title);
+            margin-top: 0.2rem;
+        }
+
+        .kpi-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .ic-emerald { background: rgba(16, 185, 129, 0.15); color: var(--emerald); }
+        .ic-cyan { background: rgba(6, 182, 212, 0.15); color: var(--cyan); }
+        .ic-indigo { background: rgba(99, 102, 241, 0.15); color: var(--primary-light); }
+        .ic-amber { background: rgba(245, 158, 11, 0.15); color: var(--amber); }
+
+        /* DASHBOARD MODULE LAUNCHER CARDS */
+        .module-launch-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+            margin-top: 1.5rem;
+        }
+
+        .module-launch-card {
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.25s ease;
+            cursor: pointer;
+        }
+
+        .module-launch-card:hover {
+            border-color: var(--cyan);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(6, 182, 212, 0.15);
+        }
+
+        .launch-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .launch-card-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(6, 182, 212, 0.15);
+            color: var(--cyan);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .launch-card-title {
+            font-weight: 700;
+            color: var(--text-title);
+            font-size: 0.95rem;
+        }
+
+        .launch-card-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            line-height: 1.4;
+        }
+
+        .launch-btn {
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            color: var(--primary-light);
+            padding: 0.45rem 0.9rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+        }
+
+        .module-launch-card:hover .launch-btn {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        /* MODULE PANELS */
+        .module-panel {
+            display: none;
+        }
+
+        .module-panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 18px;
+            padding: 1.6rem;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.65rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-title);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-title i {
+            color: var(--cyan);
+        }
+
+        .grid-2 { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+
+        @media (max-width: 1024px) {
+            .grid-2, .grid-3, .stats-row, .module-launch-grid { grid-template-columns: 1fr; }
+            main { margin-left: 0; }
+            aside { display: none; }
+        }
+
+        /* INPUT CONTROLS */
+        textarea, select, input[type="text"], input[type="file"] {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 0.85rem 1rem;
+            color: var(--text-title);
+            font-size: 0.92rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        textarea:focus, select:focus, input[type="text"]:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 14px rgba(99, 102, 241, 0.3);
+        }
+
+        .preset-pills {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.75rem;
+        }
+
+        .preset-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            padding: 0.35rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .preset-btn:hover, .preset-btn.active {
+            background: rgba(99, 102, 241, 0.18);
+            color: var(--primary-light);
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-action {
+            background: linear-gradient(135deg, var(--primary), #4f46e5);
+            color: #fff;
+            border: none;
+            padding: 0.8rem 1.6rem;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+            text-decoration: none;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border: 1px solid var(--border-subtle);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.84rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--cyan);
+        }
+
+        /* SENTIMENT BADGES */
+        .badge-sentiment {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.45rem 1.1rem;
+            border-radius: 999px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-pos { background: rgba(16, 185, 129, 0.15); color: var(--emerald); border: 1px solid var(--emerald); }
+        .badge-neu { background: rgba(245, 158, 11, 0.15); color: var(--amber); border: 1px solid var(--amber); }
+        .badge-neg { background: rgba(244, 63, 94, 0.15); color: var(--rose); border: 1px solid var(--rose); }
+
+        /* PROGRESS BARS */
+        .bar-container {
+            background: var(--bg-input);
+            border-radius: 999px;
+            height: 9px;
+            overflow: hidden;
+            margin-top: 0.35rem;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            transition: width 0.5s ease;
+        }
+
+        .fill-pos { background: linear-gradient(90deg, #10b981, #34d399); }
+        .fill-neu { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .fill-neg { background: linear-gradient(90deg, #f43f5e, #fb7185); }
+
+        /* PIPELINE STEP BOX */
+        .step-card {
+            background: var(--bg-input);
+            border-left: 4px solid var(--cyan);
+            border-radius: 0 10px 10px 0;
+            padding: 0.85rem 1.1rem;
+            margin-bottom: 0.85rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.86rem;
+        }
+
+        .step-label {
+            color: var(--cyan);
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.84rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* TABLES */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.5rem;
+        }
+
+        th, td {
+            padding: 0.85rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        th {
+            background: var(--bg-input);
+            color: var(--cyan);
+            font-weight: 700;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        td { font-size: 0.88rem; }
+
+        /* CHIPS */
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: var(--primary-light);
+            padding: 0.4rem 0.85rem;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.84rem;
+            margin: 0.25rem;
+        }
+
+        .chip-weight {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.76rem;
+            color: #fff;
+        }
+
+        /* DROPZONE */
+        .dropzone {
+            border: 2px dashed var(--border-glow);
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: 14px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .dropzone:hover {
+            border-color: var(--cyan);
+            background: rgba(6, 182, 212, 0.08);
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            background: var(--bg-sidebar);
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR NAVIGATION -->
+    <aside>
+        <div class="sidebar-brand">
+            <div class="brand-logo">
+                <i class="fa-solid fa-brain"></i>
+            </div>
+            <div class="brand-text">
+                <h2>Sentiment AI</h2>
+                <p>Aditya University CSE</p>
+            </div>
+        </div>
+
+        <div class="nav-label">System Modules</div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <button class="active" onclick="switchModule('dashboard')">
+                    <i class="fa-solid fa-chart-pie"></i> Main Dashboard
+                </button>
+            </li>
+            <li class="nav-item">
+                <button onclick="switchModule('datasets')">
+                    <i class="fa-solid fa-database"></i> Dataset Upload & Records
+                </button>
+            </li>
+            <li class="nav-item">
+                <button onclick="switchModule('classifier')">
+                    <i class="fa-solid fa-bolt"></i> Text Classifier
+                </button>
+            </li>
+            <li class="nav-item">
+                <button onclick="switchModule('pipeline')">
+                    <i class="fa-solid fa-sliders"></i> 6-Stage NLP Pipeline
+                </button>
+            </li>
+            <li class="nav-item">
+                <button onclick="switchModule('scraper')">
+                    <i class="fa-solid fa-spider"></i> Web Page Scraper
+                </button>
+            </li>
+            <li class="nav-item">
+                <button onclick="switchModule('benchmarks')">
+                    <i class="fa-solid fa-trophy"></i> Model Benchmarks
+                </button>
+            </li>
+            <li class="nav-item">
+                <button onclick="switchModule('features')">
+                    <i class="fa-solid fa-tags"></i> TF-IDF Keywords
+                </button>
+            </li>
+            <li class="nav-item">
+                <button onclick="switchModule('stream')">
+                    <i class="fa-solid fa-rss"></i> Real-Time Stream
+                </button>
+            </li>
+            <li class="nav-item">
+                <button onclick="switchModule('batch')">
+                    <i class="fa-solid fa-layer-group"></i> Batch Review Processor
+                </button>
+            </li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <div style="font-weight: 800; color: var(--text-title);">Aditya University</div>
+            <div style="color: var(--cyan); font-weight: 600;">Department of CSE</div>
+            <div style="color: var(--text-muted); font-size: 0.7rem; margin-top: 0.2rem;">Real-Time Sentiment AI</div>
+        </div>
+    </aside>
+
+    <!-- MAIN APP CONTENT -->
+    <main>
+        <!-- TOPBAR -->
+        <topbar>
+            <div class="page-title">
+                <h1 id="active-module-title"><i class="fa-solid fa-chart-pie" style="color: var(--cyan);"></i> Main Overview Dashboard</h1>
+            </div>
+
+            <div class="badge-live">
+                <div class="live-dot"></div>
+                Hybrid Ensemble Active (94.12% Accuracy)
+            </div>
+        </topbar>
+
+        <!-- CONTENT BODY -->
+        <div class="content-body">
+
+            <!-- KPI STATS CARDS -->
+            <div class="stats-row">
+                <div class="kpi-card">
+                    <div>
+                        <div class="kpi-title">Ensemble Accuracy</div>
+                        <div class="kpi-value" style="color: var(--emerald);">94.12%</div>
+                    </div>
+                    <div class="kpi-icon ic-emerald"><i class="fa-solid fa-circle-check"></i></div>
+                </div>
+
+                <div class="kpi-card">
+                    <div>
+                        <div class="kpi-title">Registered Datasets</div>
+                        <div id="kpi-datasets-count" class="kpi-value" style="color: var(--cyan);">1</div>
+                    </div>
+                    <div class="kpi-icon ic-cyan"><i class="fa-solid fa-database"></i></div>
+                </div>
+
+                <div class="kpi-card">
+                    <div>
+                        <div class="kpi-title">Total Records</div>
+                        <div id="kpi-total-records" class="kpi-value" style="color: var(--primary-light);">47,276</div>
+                    </div>
+                    <div class="kpi-icon ic-indigo"><i class="fa-solid fa-layer-group"></i></div>
+                </div>
+
+                <div class="kpi-card">
+                    <div>
+                        <div class="kpi-title">Inference Speed</div>
+                        <div class="kpi-value" style="color: var(--amber);">&lt; 10ms</div>
+                    </div>
+                    <div class="kpi-icon ic-amber"><i class="fa-solid fa-gauge-high"></i></div>
+                </div>
+            </div>
+
+            <!-- MODULE 1: MAIN DASHBOARD -->
+            <div id="module-dashboard" class="module-panel active">
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fa-solid fa-chart-doughnut"></i> Active Dataset Class Distribution</div>
+                        </div>
+                        <div style="position: relative; height: 280px; display: flex; justify-content: center; align-items: center;">
+                            <canvas id="overviewChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fa-solid fa-circle-info"></i> System Highlights</div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+                            <div style="background: var(--bg-input); padding: 0.85rem 1rem; border-radius: 12px; border-left: 4px solid var(--emerald);">
+                                <div style="font-weight: 700; color: var(--emerald); font-size: 0.9rem;">Dataset Upload & Management Engine</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Upload custom CSV, JSON, or TXT datasets. Auto-detects text/labels or annotates using ML models.</div>
+                            </div>
+
+                            <div style="background: var(--bg-input); padding: 0.85rem 1rem; border-radius: 12px; border-left: 4px solid var(--cyan);">
+                                <div style="font-weight: 700; color: var(--cyan); font-size: 0.9rem;">Enhanced Web Scraper</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Extracts cleaned text from live URLs or direct HTML text without tag noise.</div>
+                            </div>
+
+                            <div style="background: var(--bg-input); padding: 0.85rem 1rem; border-radius: 12px; border-left: 4px solid var(--primary-light);">
+                                <div style="font-weight: 700; color: var(--primary-light); font-size: 0.9rem;">Real-Time Dataset Selection & Multi-Model Testing</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Select any uploaded dataset for real-time review feeds or run multi-model evaluation benchmarks!</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DASHBOARD RECORDS INVENTORY TABLE -->
+                <div class="card" style="margin-top: 1.5rem;">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-list-check"></i> Dashboard Records & Dataset Inventory</div>
+                        <button class="btn-action" style="padding: 0.4rem 1rem; font-size: 0.82rem;" onclick="switchModule('datasets')">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload New Dataset
+                        </button>
+                    </div>
+
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Dataset Name</th>
+                                    <th>Filename / Source</th>
+                                    <th>Total Records</th>
+                                    <th>Positive</th>
+                                    <th>Neutral</th>
+                                    <th>Negative</th>
+                                    <th>Date Registered</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboard-inventory-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- MODULE BUTTON LAUNCHERS -->
+                <div class="card" style="margin-top: 1.5rem;">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-cubes"></i> Interactive System Modules</div>
+                    </div>
+
+                    <div class="module-launch-grid">
+                        <div class="module-launch-card" onclick="switchModule('datasets')">
+                            <div class="launch-card-header">
+                                <div class="launch-card-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--primary-light);"><i class="fa-solid fa-database"></i></div>
+                                <div class="launch-card-title">Dataset Upload & Records</div>
+                            </div>
+                            <div class="launch-card-desc">Upload CSV/JSON/TXT datasets, manage records, and test model performance across datasets.</div>
+                            <div class="launch-btn"><span>Upload Dataset</span><i class="fa-solid fa-arrow-right"></i></div>
+                        </div>
+
+                        <div class="module-launch-card" onclick="switchModule('classifier')">
+                            <div class="launch-card-header">
+                                <div class="launch-card-icon"><i class="fa-solid fa-bolt"></i></div>
+                                <div class="launch-card-title">Text Classifier</div>
+                            </div>
+                            <div class="launch-card-desc">Classify single product review text using 5 machine learning models with live probability meters.</div>
+                            <div class="launch-btn"><span>Open Classifier</span><i class="fa-solid fa-arrow-right"></i></div>
+                        </div>
+
+                        <div class="module-launch-card" onclick="switchModule('scraper')">
+                            <div class="launch-card-header">
+                                <div class="launch-card-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--emerald);"><i class="fa-solid fa-spider"></i></div>
+                                <div class="launch-card-title">Web Page Scraper</div>
+                            </div>
+                            <div class="launch-card-desc">Scrape live URLs or raw HTML text, extract text snippets, and compute overall page sentiment score.</div>
+                            <div class="launch-btn"><span>Launch Scraper</span><i class="fa-solid fa-arrow-right"></i></div>
+                        </div>
+
+                        <div class="module-launch-card" onclick="switchModule('stream')">
+                            <div class="launch-card-header">
+                                <div class="launch-card-icon" style="background: rgba(139, 92, 246, 0.15); color: var(--violet);"><i class="fa-solid fa-rss"></i></div>
+                                <div class="launch-card-title">Real-Time Stream</div>
+                            </div>
+                            <div class="launch-card-desc">Simulate live review streams with dataset selector dropdown and real-time distribution chart.</div>
+                            <div class="launch-btn"><span>Start Stream</span><i class="fa-solid fa-arrow-right"></i></div>
+                        </div>
+
+                        <div class="module-launch-card" onclick="switchModule('benchmarks')">
+                            <div class="launch-card-header">
+                                <div class="launch-card-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--amber);"><i class="fa-solid fa-trophy"></i></div>
+                                <div class="launch-card-title">Model Benchmarks</div>
+                            </div>
+                            <div class="launch-card-desc">Compare Accuracy, Precision, Recall, F1-Score, and Latency across 5 ML classifiers.</div>
+                            <div class="launch-btn"><span>View Benchmarks</span><i class="fa-solid fa-arrow-right"></i></div>
+                        </div>
+
+                        <div class="module-launch-card" onclick="switchModule('batch')">
+                            <div class="launch-card-header">
+                                <div class="launch-card-icon" style="background: rgba(6, 182, 212, 0.15); color: var(--cyan);"><i class="fa-solid fa-layer-group"></i></div>
+                                <div class="launch-card-title">Batch Processor</div>
+                            </div>
+                            <div class="launch-card-desc">Paste multiple review lines to run bulk classification with aggregate average metrics.</div>
+                            <div class="launch-btn"><span>Process Batch</span><i class="fa-solid fa-arrow-right"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 9: DATASET UPLOAD & RECORDS MANAGER -->
+            <div id="module-datasets" class="module-panel">
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fa-solid fa-cloud-arrow-up"></i> Upload Custom Dataset (CSV, JSON, TXT)</div>
+                        </div>
+
+                        <div style="margin-bottom: 1rem;">
+                            <label style="font-size: 0.82rem; color: var(--text-muted); display: block; margin-bottom: 0.4rem; font-weight: 600;">Select File from Device</label>
+                            <input type="file" id="dataset-file-input" accept=".csv,.json,.txt" onchange="handleFileSelect(event)">
+                        </div>
+
+                        <div class="dropzone" onclick="document.getElementById('dataset-file-input').click()">
+                            <i class="fa-solid fa-file-csv" style="font-size: 2.5rem; color: var(--cyan); margin-bottom: 0.5rem;"></i>
+                            <div style="font-weight: 700; color: var(--text-title);" id="file-drop-label">Click or Drag & Drop Dataset File Here</div>
+                            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.3rem;">Supports CSV with text/reviews & rating/sentiment, JSON array, or plain text lines</div>
+                        </div>
+
+                        <div style="margin-top: 1.25rem;">
+                            <button class="btn-action" onclick="uploadDatasetFile()"><i class="fa-solid fa-upload"></i> Upload & Process Dataset</button>
+                        </div>
+
+                        <div id="upload-status-box" style="margin-top: 1rem; display: none;"></div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fa-solid fa-vials"></i> Test All Models on Uploaded Dataset</div>
+                        </div>
+
+                        <div style="margin-bottom: 1rem;">
+                            <label style="font-size: 0.82rem; color: var(--text-muted); display: block; margin-bottom: 0.4rem; font-weight: 600;">Select Target Dataset to Test</label>
+                            <select id="eval-dataset-select"></select>
+                        </div>
+
+                        <button class="btn-action" onclick="evaluateSelectedDataset()"><i class="fa-solid fa-chart-line"></i> Run Multi-Model Evaluation</button>
+
+                        <div id="eval-results-container" style="margin-top: 1.25rem; display: none;">
+                            <div style="font-size: 0.85rem; font-weight: 700; color: var(--cyan); margin-bottom: 0.5rem;" id="eval-dataset-title">Evaluation Results</div>
+                            <div style="overflow-x: auto;">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Model Name</th>
+                                            <th>Accuracy</th>
+                                            <th>Tested</th>
+                                            <th>Pos / Neu / Neg</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="eval-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ALL REGISTERED DASHBOARD RECORDS -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-database"></i> Registered Dashboard Dataset Inventory</div>
+                        <button class="btn-secondary" onclick="loadDatasetList()"><i class="fa-solid fa-rotate-right"></i> Refresh List</button>
+                    </div>
+
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Dataset ID</th>
+                                    <th>Dataset Name</th>
+                                    <th>Filename / Source</th>
+                                    <th>Total Records</th>
+                                    <th>Pos / Neu / Neg Counts</th>
+                                    <th>Registration Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="datasets-full-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 2: LIVE TEXT SENTIMENT CLASSIFIER -->
+            <div id="module-classifier" class="module-panel">
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fa-solid fa-pen-to-square"></i> Input Review Text & Model Selection</div>
+                        </div>
+
+                        <div style="margin-bottom: 1rem;">
+                            <label style="font-size: 0.82rem; color: var(--text-muted); display: block; margin-bottom: 0.4rem; font-weight: 600;">Select Classifier Model</label>
+                            <select id="model-select" onchange="analyzeSingleText()">
+                                <option value="Ensemble">Hybrid Soft-Voting Ensemble (94.12% Accuracy)</option>
+                                <option value="Linear SVC">Linear Support Vector Machine (LinearSVC - 94.00%)</option>
+                                <option value="Logistic Regression">Logistic Regression (92.73%)</option>
+                                <option value="Complement Naive Bayes">Complement Naive Bayes (89.30%)</option>
+                                <option value="VADER">VADER Rule-Based Analyzer (90.21%)</option>
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom: 1rem;">
+                            <label style="font-size: 0.82rem; color: var(--text-muted); display: block; margin-bottom: 0.4rem; font-weight: 600;">Product Review Text</label>
+                            <textarea id="input-text" rows="5" placeholder="Enter product review or customer feedback...">This product is absolutely amazing! Outstanding build quality, fast performance, and customer support was super helpful.</textarea>
+
+                            <div class="preset-pills">
+                                <button class="preset-btn" onclick="setPreset('amazing')">Positive</button>
+                                <button class="preset-btn" onclick="setPreset('terrible')">Negative</button>
+                                <button class="preset-btn" onclick="setPreset('neutral')">Neutral</button>
+                                <button class="preset-btn" onclick="setPreset('negation')">Subtle Negation</button>
+                            </div>
+                        </div>
+
+                        <button class="btn-action" onclick="analyzeSingleText()"><i class="fa-solid fa-wand-magic-sparkles"></i> Classify Sentiment</button>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fa-solid fa-chart-pie"></i> Classification Result</div>
+                            <div id="sentiment-badge-container">
+                                <span class="badge-sentiment badge-pos"><i class="fa-solid fa-face-smile"></i> POSITIVE</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 1.25rem;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.88rem; margin-bottom: 0.35rem;">
+                                <span>Prediction Confidence</span>
+                                <span id="confidence-val" style="font-weight: 800; color: var(--cyan);">96.2%</span>
+                            </div>
+                            <div class="bar-container">
+                                <div id="confidence-bar" class="bar-fill fill-pos" style="width: 96.2%;"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.6rem; font-weight: 600;">Class Probabilities</div>
+
+                            <div style="margin-bottom: 0.6rem;">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.84rem;">
+                                    <span>Positive</span>
+                                    <span id="prob-pos" style="font-weight: 700; color: var(--emerald);">91.4%</span>
+                                </div>
+                                <div class="bar-container"><div id="bar-pos" class="bar-fill fill-pos" style="width: 91.4%;"></div></div>
+                            </div>
+
+                            <div style="margin-bottom: 0.6rem;">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.84rem;">
+                                    <span>Neutral</span>
+                                    <span id="prob-neu" style="font-weight: 700; color: var(--amber);">5.8%</span>
+                                </div>
+                                <div class="bar-container"><div id="bar-neu" class="bar-fill fill-neu" style="width: 5.8%;"></div></div>
+                            </div>
+
+                            <div>
+                                <div style="display: flex; justify-content: space-between; font-size: 0.84rem;">
+                                    <span>Negative</span>
+                                    <span id="prob-neg" style="font-weight: 700; color: var(--rose);">2.8%</span>
+                                </div>
+                                <div class="bar-container"><div id="bar-neg" class="bar-fill fill-neg" style="width: 2.8%;"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 3: 6-STAGE NLP PIPELINE -->
+            <div id="module-pipeline" class="module-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-sliders"></i> Visual Step-by-Step NLP Text Preprocessing Pipeline</div>
+                    </div>
+
+                    <div id="trace-container">
+                        <div class="step-card">
+                            <div class="step-label"><span>Stage 1: HTML Noise & URL Stripper</span><i class="fa-solid fa-filter"></i></div>
+                            <div id="trace-step-1">This product is absolutely amazing! Outstanding build quality, fast performance, and customer support was super helpful.</div>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-label"><span>Stage 2: Lowercasing Normalization</span><i class="fa-solid fa-font"></i></div>
+                            <div id="trace-step-2">this product is absolutely amazing! outstanding build quality, fast performance, and customer support was super helpful.</div>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-label"><span>Stage 3: Punctuation & Special Character Removal</span><i class="fa-solid fa-scissors"></i></div>
+                            <div id="trace-step-3">this product is absolutely amazing outstanding build quality fast performance and customer support was super helpful</div>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-label"><span>Stage 4 & 5: Tokenization & Stop-words Removal</span><i class="fa-solid fa-list-check"></i></div>
+                            <div id="trace-step-5">product absolutely amazing outstanding build quality fast performance customer support super helpful</div>
+                        </div>
+                        <div class="step-card" style="border-left-color: var(--emerald);">
+                            <div class="step-label" style="color: var(--emerald);"><span>Stage 6: Stemming -> Final TF-IDF Tokens</span><i class="fa-solid fa-circle-check"></i></div>
+                            <div id="trace-step-6" style="color: var(--emerald); font-weight: 600;">product absolute amaz outstand build qualiti fast perform custom support super help</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 4: WEB PAGE SCRAPER -->
+            <div id="module-scraper" class="module-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-spider"></i> Web Page Scraping & Content Analysis</div>
+                        <div class="preset-pills">
+                            <button id="scraper-tab-url" class="preset-btn active" onclick="toggleScraperMode('url')">Live Web URL Scraper</button>
+                            <button id="scraper-tab-raw" class="preset-btn" onclick="toggleScraperMode('raw')">Direct Web Text / HTML Scraper</button>
+                        </div>
+                    </div>
+
+                    <!-- URL SCRAPER FORM -->
+                    <div id="scraper-url-box">
+                        <div style="display: flex; gap: 1rem; margin-bottom: 0.75rem;">
+                            <input type="text" id="url-input" value="https://tech-reviews.com/gadget-review" placeholder="Enter web page URL (e.g. https://example.com/article)...">
+                            <button class="btn-action" onclick="analyzeURL()"><i class="fa-solid fa-spider"></i> Scrape Page</button>
+                        </div>
+
+                        <div class="preset-pills">
+                            <span style="font-size: 0.8rem; color: var(--text-muted); align-self: center;">Try Samples:</span>
+                            <button class="preset-btn" onclick="setUrlPreset('tech')">Tech Gadget Review</button>
+                            <button class="preset-btn" onclick="setUrlPreset('amazon')">E-Commerce Feedback</button>
+                            <button class="preset-btn" onclick="setUrlPreset('blog')">Consumer Blog</button>
+                        </div>
+                    </div>
+
+                    <!-- RAW TEXT SCRAPER FORM -->
+                    <div id="scraper-raw-box" style="display: none;">
+                        <textarea id="raw-scraper-input" rows="6" placeholder="Paste web page HTML code, copied web article paragraphs, or customer reviews directly here..."></textarea>
+                        <div style="margin-top: 0.75rem;">
+                            <button class="btn-action" onclick="analyzeRawWebText()"><i class="fa-solid fa-filter"></i> Scrape & Clean Text Content</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="scraper-results" style="display: none;">
+                    <div class="grid-3">
+                        <div class="card" style="text-align: center;">
+                            <div style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600;">Extracted Snippets</div>
+                            <div id="url-total-snippets" style="font-size: 2rem; font-weight: 800; color: var(--cyan); margin-top: 0.3rem;">0</div>
+                        </div>
+                        <div class="card" style="text-align: center;">
+                            <div style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600;">Dominant Page Sentiment</div>
+                            <div id="url-dominant-sentiment" style="font-size: 1.5rem; font-weight: 800; color: var(--emerald); margin-top: 0.3rem;">POSITIVE</div>
+                        </div>
+                        <div class="card" style="text-align: center;">
+                            <div style="color: var(--text-muted); font-size: 0.8rem; font-weight: 600;">Fetch Status</div>
+                            <div id="url-fetch-notice" style="font-size: 0.85rem; color: #cbd5e1; margin-top: 0.3rem;">Live Scrape Success</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fa-solid fa-list-check"></i> Extracted Paragraph Snippets & Sentiment Classification</div>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Extracted Web Paragraph Snippet</th>
+                                        <th>Sentiment</th>
+                                        <th>Confidence</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="url-snippets-table"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 5: MODEL BENCHMARKS -->
+            <div id="module-benchmarks" class="module-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-trophy"></i> Machine Learning Classifier Benchmarks</div>
+                        <button class="btn-action" style="padding: 0.35rem 0.9rem; font-size: 0.8rem;" onclick="loadMetrics()"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Algorithm / Classifier</th>
+                                    <th>Accuracy</th>
+                                    <th>Precision</th>
+                                    <th>Recall</th>
+                                    <th>F1-Score</th>
+                                    <th>Latency</th>
+                                </tr>
+                            </thead>
+                            <tbody id="metrics-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-chart-column"></i> Accuracy Comparison Bar Chart</div>
+                    </div>
+                    <div style="position: relative; height: 260px;">
+                        <canvas id="benchmarkBarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 6: TF-IDF TOP KEYWORDS -->
+            <div id="module-features" class="module-panel">
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title" style="color: var(--emerald);"><i class="fa-solid fa-circle-plus"></i> Top Positive Trigrams (+Weight)</div>
+                        </div>
+                        <div id="pos-features-chips"></div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title" style="color: var(--rose);"><i class="fa-solid fa-circle-minus"></i> Top Negative Trigrams (-Weight)</div>
+                        </div>
+                        <div id="neg-features-chips"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 7: REAL-TIME STREAM -->
+            <div id="module-stream" class="module-panel">
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fa-solid fa-rss"></i> Live Review Feed Simulator</div>
+                            <button class="btn-action" style="padding: 0.4rem 1rem; font-size: 0.82rem;" onclick="toggleStream()"><i id="stream-icon" class="fa-solid fa-play"></i> <span id="stream-btn-text">Start Live Stream</span></button>
+                        </div>
+
+                        <div class="grid-2" style="margin-bottom: 1rem;">
+                            <div>
+                                <label style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Select Dataset Source</label>
+                                <select id="stream-dataset-select"></select>
+                            </div>
+                            <div>
+                                <label style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Select Stream Model</label>
+                                <select id="stream-model-select">
+                                    <option value="Ensemble">Hybrid Soft-Voting Ensemble</option>
+                                    <option value="Linear SVC">Linear SVC</option>
+                                    <option value="Logistic Regression">Logistic Regression</option>
+                                    <option value="Complement Naive Bayes">Complement Naive Bayes</option>
+                                    <option value="VADER">VADER Analyzer</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="stream-list" style="max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem;"></div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fa-solid fa-chart-doughnut"></i> Dynamic Stream Distribution</div>
+                        </div>
+                        <div style="position: relative; height: 320px; display: flex; justify-content: center; align-items: center;">
+                            <canvas id="streamChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 8: BATCH PROCESSOR -->
+            <div id="module-batch" class="module-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-layer-group"></i> Batch Review Processor</div>
+                    </div>
+
+                    <textarea id="batch-input" rows="6" placeholder="Paste multiple review comments (one per line)...">This speaker has incredible bass and sound clarity!
+Battery died after 10 minutes, total waste of money.
+The shipment arrived on time in standard box.
+Exceeded my expectations! Highly recommend this brand.
+Item was damaged during shipping and refund was denied.</textarea>
+
+                    <div style="margin-top: 1rem;">
+                        <button class="btn-action" onclick="analyzeBatchText()"><i class="fa-solid fa-list-check"></i> Analyze Batch Reviews</button>
+                    </div>
+                </div>
+
+                <div id="batch-results-card" class="card" style="display: none;">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-chart-bar"></i> Batch Summary Results</div>
+                    </div>
+
+                    <div class="grid-3" style="margin-bottom: 1.25rem;">
+                        <div style="background: var(--bg-input); padding: 0.85rem; border-radius: 10px; text-align: center;">
+                            <div style="color: var(--text-muted); font-size: 0.78rem;">Total Processed</div>
+                            <div id="batch-total" style="font-size: 1.6rem; font-weight: 800; color: var(--cyan);">0</div>
+                        </div>
+                        <div style="background: var(--bg-input); padding: 0.85rem; border-radius: 10px; text-align: center;">
+                            <div style="color: var(--text-muted); font-size: 0.78rem;">Dominant Sentiment</div>
+                            <div id="batch-dominant" style="font-size: 1.4rem; font-weight: 800; color: var(--emerald);">POSITIVE</div>
+                        </div>
+                        <div style="background: var(--bg-input); padding: 0.85rem; border-radius: 10px; text-align: center;">
+                            <div style="color: var(--text-muted); font-size: 0.78rem;">Average Confidence</div>
+                            <div id="batch-avg-conf" style="font-size: 1.6rem; font-weight: 800; color: var(--primary-light);">0%</div>
+                        </div>
+                    </div>
+
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Input Text</th>
+                                    <th>Predicted Sentiment</th>
+                                    <th>Confidence</th>
+                                </tr>
+                            </thead>
+                            <tbody id="batch-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer>
+            Real-Time Sentiment AI Dashboard | Aditya University CSE Department
+        </footer>
+    </main>
+
+    <script>
+        const moduleTitles = {
+            'dashboard': '<i class="fa-solid fa-chart-pie" style="color: var(--cyan);"></i> Main Overview Dashboard',
+            'datasets': '<i class="fa-solid fa-database" style="color: var(--cyan);"></i> Dataset Upload & Records Manager',
+            'classifier': '<i class="fa-solid fa-bolt" style="color: var(--cyan);"></i> Live Text Sentiment Classifier',
+            'pipeline': '<i class="fa-solid fa-sliders" style="color: var(--cyan);"></i> 6-Stage NLP Preprocessing Pipeline',
+            'scraper': '<i class="fa-solid fa-spider" style="color: var(--cyan);"></i> Web Page Scraper & URL Intel',
+            'benchmarks': '<i class="fa-solid fa-trophy" style="color: var(--cyan);"></i> Model Benchmarks & Comparison',
+            'features': '<i class="fa-solid fa-tags" style="color: var(--cyan);"></i> Top TF-IDF Keywords & Features',
+            'stream': '<i class="fa-solid fa-rss" style="color: var(--cyan);"></i> Real-Time Review Feed Stream',
+            'batch': '<i class="fa-solid fa-layer-group" style="color: var(--cyan);"></i> Batch Review Processor'
+        };
+
+        function switchModule(modId) {
+            document.querySelectorAll('.nav-item button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.module-panel').forEach(panel => panel.classList.remove('active'));
+
+            const matchBtn = Array.from(document.querySelectorAll('.nav-item button')).find(b => b.getAttribute('onclick') && b.getAttribute('onclick').includes(`'${modId}'`));
+            if (matchBtn) matchBtn.classList.add('active');
+
+            const modEl = document.getElementById('module-' + modId);
+            if (modEl) modEl.classList.add('active');
+            document.getElementById('active-module-title').innerHTML = moduleTitles[modId] || modId;
+
+            if (modId === 'dashboard') initOverviewChart();
+            if (modId === 'datasets') loadDatasetList();
+            if (modId === 'benchmarks') loadMetrics();
+            if (modId === 'features') loadTopFeatures();
+            if (modId === 'stream') { loadDatasetList(); initStreamChart(); }
+        }
+
+        let selectedFile = null;
+        function handleFileSelect(evt) {
+            selectedFile = evt.target.files[0];
+            if (selectedFile) {
+                document.getElementById('file-drop-label').innerText = `Selected File: ${selectedFile.name} (${(selectedFile.size / 1024).toFixed(1)} KB)`;
+            }
+        }
+
+        async function uploadDatasetFile() {
+            if (!selectedFile) {
+                const input = document.getElementById('dataset-file-input');
+                if (input.files.length > 0) selectedFile = input.files[0];
+            }
+            if (!selectedFile) return alert("Please select a CSV, JSON, or TXT file to upload.");
+
+            const statusBox = document.getElementById('upload-status-box');
+            statusBox.style.display = 'block';
+            statusBox.style.background = 'rgba(99, 102, 241, 0.15)';
+            statusBox.style.border = '1px solid var(--cyan)';
+            statusBox.style.padding = '0.75rem 1rem';
+            statusBox.style.borderRadius = '10px';
+            statusBox.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Uploading, parsing schema, and annotating dataset '${selectedFile.name}'...`;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                const res = await fetch('/api/dataset/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    statusBox.style.background = 'rgba(16, 185, 129, 0.15)';
+                    statusBox.style.borderColor = 'var(--emerald)';
+                    statusBox.innerHTML = `<div style="color: var(--emerald); font-weight: 700;"><i class="fa-solid fa-circle-check"></i> ${data.message}</div>
+                    <div style="font-size: 0.8rem; margin-top: 0.3rem;">Indexed ${data.dataset.total_records} records (Pos: ${data.dataset.counts.positive}, Neu: ${data.dataset.counts.neutral}, Neg: ${data.dataset.counts.negative}).</div>`;
+                    
+                    selectedFile = null;
+                    document.getElementById('file-drop-label').innerText = "Click or Drag & Drop Dataset File Here";
+                    loadDatasetList();
+                } else {
+                    statusBox.style.background = 'rgba(244, 63, 94, 0.15)';
+                    statusBox.style.borderColor = 'var(--rose)';
+                    statusBox.innerHTML = `<div style="color: var(--rose); font-weight: 700;"><i class="fa-solid fa-triangle-exclamation"></i> Upload Failed</div>
+                    <div style="font-size: 0.8rem; margin-top: 0.2rem;">${data.detail || 'Failed to process file.'}</div>`;
+                }
+            } catch (err) {
+                statusBox.style.background = 'rgba(244, 63, 94, 0.15)';
+                statusBox.style.borderColor = 'var(--rose)';
+                statusBox.innerHTML = `<div style="color: var(--rose); font-weight: 700;"><i class="fa-solid fa-triangle-exclamation"></i> Error uploading file: ${err}</div>`;
+            }
+        }
+
+        let registeredDatasetsList = [];
+        async function loadDatasetList() {
+            try {
+                const res = await fetch('/api/dataset/list');
+                const data = await res.json();
+                registeredDatasetsList = data.datasets || [];
+
+                // Update KPI counters
+                document.getElementById('kpi-datasets-count').innerText = registeredDatasetsList.length;
+                const totalRecs = registeredDatasetsList.reduce((acc, d) => acc + d.total_records, 0);
+                document.getElementById('kpi-total-records').innerText = totalRecs.toLocaleString();
+
+                // Update Dashboard Overview Inventory Table
+                const dashTbody = document.getElementById('dashboard-inventory-table-body');
+                if (dashTbody) {
+                    dashTbody.innerHTML = '';
+                    registeredDatasetsList.forEach(ds => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td style="font-weight: 700; color: var(--cyan);">${ds.name}</td>
+                            <td>${ds.filename}</td>
+                            <td style="font-weight: 800;">${ds.total_records.toLocaleString()}</td>
+                            <td style="color: var(--emerald); font-weight: 700;">${ds.counts.positive}</td>
+                            <td style="color: var(--amber); font-weight: 700;">${ds.counts.neutral}</td>
+                            <td style="color: var(--rose); font-weight: 700;">${ds.counts.negative}</td>
+                            <td style="font-size: 0.8rem; color: var(--text-muted);">${ds.upload_date}</td>
+                            <td>
+                                <button class="btn-secondary" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="switchModule('datasets')">Test Models</button>
+                            </td>
+                        `;
+                        dashTbody.appendChild(tr);
+                    });
+                }
+
+                // Update Full Datasets Table in Module 9
+                const fullTbody = document.getElementById('datasets-full-table-body');
+                if (fullTbody) {
+                    fullTbody.innerHTML = '';
+                    registeredDatasetsList.forEach(ds => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--text-muted);">${ds.id}</td>
+                            <td style="font-weight: 700; color: var(--cyan);">${ds.name}</td>
+                            <td>${ds.filename}</td>
+                            <td style="font-weight: 800; color: var(--text-title);">${ds.total_records.toLocaleString()}</td>
+                            <td>
+                                <span style="color: var(--emerald); font-weight: 700;">${ds.counts.positive}</span> / 
+                                <span style="color: var(--amber); font-weight: 700;">${ds.counts.neutral}</span> / 
+                                <span style="color: var(--rose); font-weight: 700;">${ds.counts.negative}</span>
+                            </td>
+                            <td style="font-size: 0.8rem; color: var(--text-muted);">${ds.upload_date}</td>
+                            <td>
+                                <span class="badge-sentiment ${ds.is_default ? 'badge-pos' : 'badge-neu'}">${ds.is_default ? 'DEFAULT RECORD' : 'USER RECORD'}</span>
+                            </td>
+                        `;
+                        fullTbody.appendChild(tr);
+                    });
+                }
+
+                // Update Dropdown Selectors (Stream & Eval)
+                const evalSelect = document.getElementById('eval-dataset-select');
+                const streamSelect = document.getElementById('stream-dataset-select');
+
+                if (evalSelect) {
+                    evalSelect.innerHTML = '';
+                    registeredDatasetsList.forEach(ds => {
+                        evalSelect.innerHTML += `<option value="${ds.id}">${ds.name} (${ds.total_records} records)</option>`;
+                    });
+                }
+
+                if (streamSelect) {
+                    const curr = streamSelect.value;
+                    streamSelect.innerHTML = '';
+                    registeredDatasetsList.forEach(ds => {
+                        streamSelect.innerHTML += `<option value="${ds.id}">${ds.name} (${ds.total_records} records)</option>`;
+                    });
+                    if (curr) streamSelect.value = curr;
+                }
+            } catch (err) {
+                console.error("Error loading dataset list:", err);
+            }
+        }
+
+        async function evaluateSelectedDataset() {
+            const dsId = document.getElementById('eval-dataset-select').value;
+            if (!dsId) return alert("Please select a dataset to evaluate.");
+
+            const container = document.getElementById('eval-results-container');
+            container.style.display = 'block';
+            document.getElementById('eval-dataset-title').innerText = `Running Multi-Model Test Evaluation on '${dsId}'...`;
+            
+            const tbody = document.getElementById('eval-table-body');
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> Evaluating 5 Machine Learning Models across dataset...</td></tr>`;
+
+            try {
+                const res = await fetch(`/api/dataset/${dsId}/evaluate`, { method: 'POST' });
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.detail || "Evaluation failed.");
+
+                document.getElementById('eval-dataset-title').innerText = `Multi-Model Benchmark Results for '${data.dataset_name}' (${data.total_records} Records)`;
+                tbody.innerHTML = '';
+
+                for (const [modelName, m] of Object.entries(data.model_evaluations)) {
+                    const tr = document.createElement('tr');
+                    const isBest = modelName === 'Ensemble';
+                    const counts = m.predicted_counts;
+                    tr.innerHTML = `
+                        <td style="font-weight:700; color: ${isBest ? 'var(--emerald)' : 'var(--cyan)'};">${modelName} ${isBest ? '🔥' : ''}</td>
+                        <td style="font-weight:800; color: var(--emerald);">${(m.accuracy * 100).toFixed(2)}%</td>
+                        <td>${m.total_tested}</td>
+                        <td style="font-size: 0.82rem;">
+                            <span style="color: var(--emerald); font-weight: 700;">+${counts.positive || 0}</span> / 
+                            <span style="color: var(--amber); font-weight: 700;">~${counts.neutral || 0}</span> / 
+                            <span style="color: var(--rose); font-weight: 700;">-${counts.negative || 0}</span>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="4" style="color: var(--rose);">Error evaluating dataset: ${err.message}</td></tr>`;
+            }
+        }
+
+        function toggleScraperMode(mode) {
+            const urlTab = document.getElementById('scraper-tab-url');
+            const rawTab = document.getElementById('scraper-tab-raw');
+            const urlBox = document.getElementById('scraper-url-box');
+            const rawBox = document.getElementById('scraper-raw-box');
+
+            if (mode === 'url') {
+                urlTab.classList.add('active'); rawTab.classList.remove('active');
+                urlBox.style.display = 'block'; rawBox.style.display = 'none';
+            } else {
+                rawTab.classList.add('active'); urlTab.classList.remove('active');
+                rawBox.style.display = 'block'; urlBox.style.display = 'none';
+            }
+        }
+
+        function setPreset(type) {
+            const txt = document.getElementById('input-text');
+            if (type === 'amazing') {
+                txt.value = "This product is absolutely amazing! Outstanding build quality, fast performance, and customer support was super helpful.";
+            } else if (type === 'terrible') {
+                txt.value = "Terrible experience. Item arrived damaged, battery drains in 30 minutes, and customer service refused refund!";
+            } else if (type === 'neutral') {
+                txt.value = "The package arrived today at 4 PM. Standard packaging containing regular device accessories.";
+            } else if (type === 'negation') {
+                txt.value = "This product is not bad at all. It never fails to impress me and works surprisingly well.";
+            }
+            analyzeSingleText();
+        }
+
+        function setUrlPreset(type) {
+            const urlInput = document.getElementById('url-input');
+            if (type === 'tech') {
+                urlInput.value = "https://tech-reviews.com/gadget-review";
+            } else if (type === 'amazon') {
+                urlInput.value = "https://amazon-reviews-sample.com/feedback";
+            } else if (type === 'blog') {
+                urlInput.value = "https://consumer-reports.org/electronics";
+            }
+            analyzeURL();
+        }
+
+        async function analyzeSingleText() {
+            const text = document.getElementById('input-text').value;
+            const modelName = document.getElementById('model-select').value;
+            
+            if (!text.trim()) return alert("Please enter text to analyze.");
+
+            try {
+                const res = await fetch('/api/analyze/text', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text, model_name: modelName })
+                });
+
+                const data = await res.json();
+                updateSingleResult(data);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function updateSingleResult(data) {
+            const sentiment = data.sentiment.toUpperCase();
+            const confidence = (data.confidence * 100).toFixed(1);
+            
+            const badgeContainer = document.getElementById('sentiment-badge-container');
+            let icon = 'fa-face-smile', badgeClass = 'badge-pos', fillClass = 'fill-pos';
+            
+            if (sentiment === 'NEUTRAL') {
+                icon = 'fa-face-meh'; badgeClass = 'badge-neu'; fillClass = 'fill-neu';
+            } else if (sentiment === 'NEGATIVE') {
+                icon = 'fa-face-frown'; badgeClass = 'badge-neg'; fillClass = 'fill-neg';
+            }
+
+            badgeContainer.innerHTML = `<span class="badge-sentiment ${badgeClass}"><i class="fa-solid ${icon}"></i> ${sentiment}</span>`;
+            
+            document.getElementById('confidence-val').innerText = `${confidence}%`;
+            const confBar = document.getElementById('confidence-bar');
+            confBar.className = `bar-fill ${fillClass}`;
+            confBar.style.width = `${confidence}%`;
+
+            const pos = (data.scores.positive * 100).toFixed(1);
+            const neu = (data.scores.neutral * 100).toFixed(1);
+            const neg = (data.scores.negative * 100).toFixed(1);
+
+            document.getElementById('prob-pos').innerText = `${pos}%`;
+            document.getElementById('bar-pos').style.width = `${pos}%`;
+
+            document.getElementById('prob-neu').innerText = `${neu}%`;
+            document.getElementById('bar-neu').style.width = `${neu}%`;
+
+            document.getElementById('prob-neg').innerText = `${neg}%`;
+            document.getElementById('bar-neg').style.width = `${neg}%`;
+
+            if (data.preprocessing_trace) {
+                const tr = data.preprocessing_trace;
+                document.getElementById('trace-step-1').innerText = tr.step_1_html_urls_removed;
+                document.getElementById('trace-step-2').innerText = tr.step_2_lowercased;
+                document.getElementById('trace-step-3').innerText = tr.step_3_special_chars_removed;
+                document.getElementById('trace-step-5').innerText = tr.step_5_stopwords_removed.join(" ");
+                document.getElementById('trace-step-6').innerText = tr.final_processed_text;
+            }
+        }
+
+        async function analyzeURL() {
+            const url = document.getElementById('url-input').value;
+            if (!url.trim()) return alert("Please enter a URL.");
+
+            try {
+                const res = await fetch('/api/analyze/url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await res.json();
+                renderScraperResults(data);
+            } catch (err) {
+                alert("Error scraping URL: " + err);
+            }
+        }
+
+        async function analyzeRawWebText() {
+            const raw = document.getElementById('raw-scraper-input').value;
+            if (!raw.trim()) return alert("Please paste web page HTML or text.");
+
+            try {
+                const res = await fetch('/api/analyze/rawtext', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ html_or_text: raw, title: "Pasted Web Page Text" })
+                });
+
+                const data = await res.json();
+                renderScraperResults(data);
+            } catch (err) {
+                alert("Error analyzing raw text: " + err);
+            }
+        }
+
+        function renderScraperResults(data) {
+            document.getElementById('scraper-results').style.display = 'block';
+            document.getElementById('url-total-snippets').innerText = data.total_snippets;
+            document.getElementById('url-dominant-sentiment').innerText = (data.dominant_sentiment || 'NEUTRAL').toUpperCase();
+            document.getElementById('url-fetch-notice').innerText = data.fetch_notice || 'Scraped successfully';
+
+            const tbody = document.getElementById('url-snippets-table');
+            tbody.innerHTML = '';
+
+            if (!data.snippets_analysis || data.snippets_analysis.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--amber);">No readable paragraph snippets extracted. Try pasting webpage content into Direct Web Text Scraper mode.</td></tr>`;
+                return;
+            }
+
+            data.snippets_analysis.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                const badgeClass = item.sentiment === 'positive' ? 'badge-pos' : (item.sentiment === 'negative' ? 'badge-neg' : 'badge-neu');
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.raw_text}</td>
+                    <td><span class="badge-sentiment ${badgeClass}">${item.sentiment.toUpperCase()}</span></td>
+                    <td style="font-weight:700;">${(item.confidence * 100).toFixed(1)}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function loadMetrics() {
+            try {
+                const res = await fetch('/api/model/metrics');
+                const data = await res.json();
+                const tbody = document.getElementById('metrics-table-body');
+                tbody.innerHTML = '';
+
+                for (const [model, m] of Object.entries(data)) {
+                    const tr = document.createElement('tr');
+                    const isBest = model.includes("Hybrid") || model.includes("Ensemble");
+                    const lat = isBest ? '< 10ms' : (model.includes("SVC") ? '< 6ms' : (model.includes("Logistic") ? '< 8ms' : '< 12ms'));
+                    tr.innerHTML = `
+                        <td style="font-weight: 700; color: ${isBest ? 'var(--emerald)' : 'var(--cyan)'};">${model} ${isBest ? '🔥 (Best Model)' : ''}</td>
+                        <td style="font-weight: 700;">${(m.accuracy * 100).toFixed(2)}%</td>
+                        <td>${(m.precision * 100).toFixed(2)}%</td>
+                        <td>${(m.recall * 100).toFixed(2)}%</td>
+                        <td style="font-weight: 800; color: var(--emerald);">${(m.f1_score * 100).toFixed(2)}%</td>
+                        <td style="color: var(--amber); font-weight: 600;">${lat}</td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+
+                initBenchmarkBarChart(data);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function loadTopFeatures() {
+            try {
+                const res = await fetch('/api/model/top-features');
+                const data = await res.json();
+                
+                const posContainer = document.getElementById('pos-features-chips');
+                const negContainer = document.getElementById('neg-features-chips');
+                posContainer.innerHTML = '';
+                negContainer.innerHTML = '';
+
+                if (data.positive) {
+                    data.positive.slice(0, 10).forEach(item => {
+                        posContainer.innerHTML += `<span class="chip">${item.word} <span class="chip-weight">+${item.weight}</span></span>`;
+                    });
+                }
+                if (data.negative) {
+                    data.negative.slice(0, 10).forEach(item => {
+                        negContainer.innerHTML += `<span class="chip" style="border-color: rgba(244,63,94,0.4); color: #fb7185;">${item.word} <span class="chip-weight" style="background: rgba(244,63,94,0.2);">${item.weight}</span></span>`;
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        let barChartInstance = null;
+        function initBenchmarkBarChart(metricsData) {
+            if (barChartInstance) return;
+            const ctx = document.getElementById('benchmarkBarChart').getContext('2d');
+            const labels = Object.keys(metricsData).map(m => m.split(' ')[0]);
+            const accs = Object.values(metricsData).map(m => (m.accuracy * 100).toFixed(2));
+
+            barChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Accuracy (%)',
+                        data: accs,
+                        backgroundColor: ['#10b981', '#06b6d4', '#6366f1', '#f43f5e', '#f59e0b'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { min: 85, max: 100, ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(255,255,255,0.08)' } },
+                        x: { ticks: { color: '#cbd5e1' }, grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        let overviewChartInstance = null;
+        function initOverviewChart() {
+            if (overviewChartInstance) return;
+            const ctx = document.getElementById('overviewChart').getContext('2d');
+            overviewChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Positive Reviews (70.8%)', 'Neutral Reviews (15.2%)', 'Negative Reviews (14.0%)'],
+                    datasets: [{
+                        data: [33468, 7182, 6626],
+                        backgroundColor: ['#10b981', '#f59e0b', '#f43f5e'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#ffffff', font: { family: 'Plus Jakarta Sans', size: 12 } } }
+                    }
+                }
+            });
+        }
+
+        // Live Stream Logic with Dataset Selection
+        let streamActive = false, streamInterval = null;
+        let streamCounts = { positive: 24, neutral: 8, negative: 6 };
+        let chartInstance = null;
+
+        function toggleStream() {
+            streamActive = !streamActive;
+            const btnText = document.getElementById('stream-btn-text');
+            const icon = document.getElementById('stream-icon');
+
+            if (streamActive) {
+                btnText.innerText = "Pause Stream";
+                icon.className = "fa-solid fa-pause";
+                streamInterval = setInterval(fetchStreamItem, 2000);
+            } else {
+                btnText.innerText = "Start Live Stream";
+                icon.className = "fa-solid fa-play";
+                clearInterval(streamInterval);
+            }
+        }
+
+        async function fetchStreamItem() {
+            try {
+                const datasetId = document.getElementById('stream-dataset-select').value || "default_amazon_47k";
+                const modelName = document.getElementById('stream-model-select').value || "Ensemble";
+
+                const res = await fetch(`/api/stream/sample?dataset_id=${encodeURIComponent(datasetId)}&model_name=${encodeURIComponent(modelName)}`);
+                const data = await res.json();
+
+                const list = document.getElementById('stream-list');
+                const div = document.createElement('div');
+                const badgeClass = data.sentiment === 'positive' ? 'badge-pos' : (data.sentiment === 'negative' ? 'badge-neg' : 'badge-neu');
+                div.style.cssText = "background: var(--bg-input); border: 1px solid var(--border-subtle); padding: 0.75rem 1rem; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;";
+                div.innerHTML = `
+                    <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                        <span style="font-size:0.86rem; color: var(--text-title);">${data.text}</span>
+                        <span style="font-size:0.72rem; color: var(--text-muted);">Model: ${data.model_used} | Dataset: ${data.dataset_id}</span>
+                    </div>
+                    <span class="badge-sentiment ${badgeClass}">${data.sentiment.toUpperCase()}</span>
+                `;
+
+                list.insertBefore(div, list.firstChild);
+                if (list.children.length > 7) list.removeChild(list.lastChild);
+
+                streamCounts[data.sentiment]++;
+                updateChart();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function initStreamChart() {
+            if (chartInstance) return;
+            const ctx = document.getElementById('streamChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Positive', 'Neutral', 'Negative'],
+                    datasets: [{
+                        data: [streamCounts.positive, streamCounts.neutral, streamCounts.negative],
+                        backgroundColor: ['#10b981', '#f59e0b', '#f43f5e'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#ffffff', font: { family: 'Plus Jakarta Sans', size: 12 } } }
+                    }
+                }
+            });
+        }
+
+        function updateChart() {
+            if (!chartInstance) return;
+            chartInstance.data.datasets[0].data = [streamCounts.positive, streamCounts.neutral, streamCounts.negative];
+            chartInstance.update();
+        }
+
+        async function analyzeBatchText() {
+            const batchVal = document.getElementById('batch-input').value;
+            const lines = batchVal.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+            if (!lines.length) return alert("Please enter review lines.");
+
+            try {
+                const res = await fetch('/api/analyze/batch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ texts: lines, model_name: 'Ensemble' })
+                });
+
+                const data = await res.json();
+                document.getElementById('batch-results-card').style.display = 'block';
+                document.getElementById('batch-total').innerText = data.total_analyzed;
+                document.getElementById('batch-dominant').innerText = data.dominant_sentiment.toUpperCase();
+                document.getElementById('batch-avg-conf').innerText = (data.average_confidence * 100).toFixed(1) + '%';
+
+                const tbody = document.getElementById('batch-table-body');
+                tbody.innerHTML = '';
+
+                data.details.forEach((item, idx) => {
+                    const tr = document.createElement('tr');
+                    const badgeClass = item.sentiment === 'positive' ? 'badge-pos' : (item.sentiment === 'negative' ? 'badge-neg' : 'badge-neu');
+                    tr.innerHTML = `
+                        <td>${idx + 1}</td>
+                        <td>${item.raw_text}</td>
+                        <td><span class="badge-sentiment ${badgeClass}">${item.sentiment.toUpperCase()}</span></td>
+                        <td style="font-weight:700;">${(item.confidence * 100).toFixed(1)}%</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                alert("Error analyzing batch: " + err);
+            }
+        }
+
+        // Initialize initial view
+        loadDatasetList();
+        initOverviewChart();
+        analyzeSingleText();
+    </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "ds_754eeb": {
+    "id": "ds_754eeb",
+    "name": "Custom Test Dataset",
+    "filename": "4e09048d_custom_test.csv",
+    "total_records": 3,
+    "counts": {
+      "positive": 1,
+      "neutral": 1,
+      "negative": 1
+    },
+    "upload_date": "2026-10-08 21:52:16",
+    "source": "Uploaded File (custom_test.csv)",
+    "is_default": false
+  },
+  "ds_7ad275": {
+    "id": "ds_7ad275",
+    "name": "Custom Test Dataset",
+    "filename": "52c5b0b4_custom_test.csv",
+    "total_records": 3,
+    "counts": {
+      "positive": 1,
+      "neutral": 1,
+      "negative": 1
+    },
+    "upload_date": "2026-10-24 18:35:12",
+    "source": "Uploaded File (custom_test.csv)",
+    "is_default": false
+  }
+}
